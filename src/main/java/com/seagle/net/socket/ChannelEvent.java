@@ -1,4 +1,4 @@
-package com.seagle.net.sesocket;
+package com.seagle.net.socket;
 
 import java.nio.channels.Channel;
 

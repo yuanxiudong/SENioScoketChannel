@@ -1,4 +1,4 @@
-package com.seagle.net.sesocket;
+package com.seagle.net.socket;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;

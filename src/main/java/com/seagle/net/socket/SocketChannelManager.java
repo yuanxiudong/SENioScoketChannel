@@ -1,4 +1,4 @@
-package com.seagle.net.sesocket;
+package com.seagle.net.socket;
 
 import android.support.annotation.NonNull;
 import android.util.Log;
