@@ -96,7 +96,7 @@ public class UDPSocketChannel extends ClientSocket {
                 mDatagramChannel = DatagramChannel.open();
                 mDatagramChannel.configureBlocking(false);
                 mChannelEventHandler = new UdpChannelEventHandler();
-                mSelectionKey = SocketChannelManager.getInstance().registerChannel(mDatagramChannel, SelectionKey.OP_READ, mChannelEventHandler);
+                mSelectionKey = SESocketManager.getInstance().registerChannel(mDatagramChannel, SelectionKey.OP_READ, mChannelEventHandler);
                 if (mSelectionKey != null) {
                     mSelectionKey.interestOps(SelectionKey.OP_READ);
                     mDatagramChannel.connect(new InetSocketAddress("127.0.0.1", mUdpPort));
@@ -189,7 +189,7 @@ public class UDPSocketChannel extends ClientSocket {
         return false;
     }
 
-    private class UdpChannelEventHandler implements SocketChannelManager.ChannelEventHandler {
+    private class UdpChannelEventHandler implements SESocketManager.ChannelEventHandler {
 
         @Override
         public boolean handleChannelEvent(ChannelEvent event) {

@@ -1,8 +1,5 @@
 package com.seagle.net.socket;
 
-import android.os.Handler;
-import android.os.Looper;
-
 import java.util.Set;
 import java.util.concurrent.CopyOnWriteArraySet;
 import java.util.concurrent.Executors;
@@ -33,11 +30,6 @@ public abstract class ClientSocket {
      * 数据接收监听
      */
     protected final Set<ClientSocketDataListener> mDataListenerSet;
-
-    /**
-     * 主线程，为了将回调接口放在主线程中运行。
-     */
-    static final Handler sMainHandler = new Handler(Looper.getMainLooper());
 
     /**
      * 全局线程

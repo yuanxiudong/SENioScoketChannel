@@ -117,7 +117,7 @@ public class TCPSocketChannelClient extends ClientSocket {
                 mSocketChannel.socket().setSoTimeout(timeout);
                 mSocketChannel.socket().setKeepAlive(true);
                 mChannelEventHandler = new ChannelEventHandler();
-                mSelectionKey = SocketChannelManager.getInstance().registerChannel(mSocketChannel, SelectionKey.OP_CONNECT, mChannelEventHandler);
+                mSelectionKey = SESocketManager.getInstance().registerChannel(mSocketChannel, SelectionKey.OP_CONNECT, mChannelEventHandler);
                 if (mSelectionKey != null) {
                     SocketAddress address = new InetSocketAddress(mServerIPAddress, mServerPort);
                     mSocketChannel.connect(address);
@@ -160,7 +160,7 @@ public class TCPSocketChannelClient extends ClientSocket {
                 connectFuture.get(timeout, TimeUnit.MILLISECONDS);
                 mConnectWaiting = false;
                 mConnected = true;
-                mSelectionKey = SocketChannelManager.getInstance().registerChannel(mSocketChannel, SelectionKey.OP_READ, mChannelEventHandler);
+                mSelectionKey = SESocketManager.getInstance().registerChannel(mSocketChannel, SelectionKey.OP_READ, mChannelEventHandler);
                 mSelectionKey.interestOps(SelectionKey.OP_READ);
                 return true;
 
@@ -265,7 +265,7 @@ public class TCPSocketChannelClient extends ClientSocket {
     /**
      * Socket通道事件处理
      */
-    private class ChannelEventHandler implements SocketChannelManager.ChannelEventHandler {
+    private class ChannelEventHandler implements SESocketManager.ChannelEventHandler {
         @Override
         public boolean handleChannelEvent(ChannelEvent event) {
             switch (event.getEventCode()) {

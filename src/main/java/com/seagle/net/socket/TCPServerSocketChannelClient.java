@@ -83,7 +83,7 @@ public class TCPServerSocketChannelClient extends ClientSocket {
             try {
                 mSocketChannel.configureBlocking(false);
                 mChannelEventHandler = new ChannelEventHandler();
-                mSelectionKey = SocketChannelManager.getInstance().registerChannel(mSocketChannel, SelectionKey.OP_READ, mChannelEventHandler);
+                mSelectionKey = SESocketManager.getInstance().registerChannel(mSocketChannel, SelectionKey.OP_READ, mChannelEventHandler);
                 if (mSelectionKey != null) {
                     mStarted = true;
                 }
@@ -204,7 +204,7 @@ public class TCPServerSocketChannelClient extends ClientSocket {
         return false;
     }
 
-    private class ChannelEventHandler implements SocketChannelManager.ChannelEventHandler {
+    private class ChannelEventHandler implements SESocketManager.ChannelEventHandler {
         @Override
         public boolean handleChannelEvent(ChannelEvent event) {
             switch (event.getEventCode()) {

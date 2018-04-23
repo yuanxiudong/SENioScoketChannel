@@ -1,8 +1,5 @@
 package com.seagle.net.socket;
 
-import android.support.annotation.NonNull;
-import android.util.Log;
-
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.channels.Channel;
@@ -20,6 +17,8 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.TimeUnit;
 
+import sun.rmi.runtime.Log;
+
 /**
  * <h1>SocketChannel管理</h1>
  * <p>封装了一下NIO操作，提供线程能力</P>
@@ -27,9 +26,7 @@ import java.util.concurrent.TimeUnit;
  * @author : seagle
  * @since : 2016/4/28
  */
-final class SocketChannelManager {
-
-    public static final String TAG = "SocketChannelManager";
+final class SESocketManager {
 
     /**
      * 选择器
@@ -50,25 +47,25 @@ final class SocketChannelManager {
     /**
      * 单实例
      */
-    private volatile static SocketChannelManager sInstance;
+    private volatile static SESocketManager sInstance;
 
     /**
      * 获取单例
      *
-     * @return SocketChannelManager
+     * @return SESocketManager
      */
-    public static synchronized SocketChannelManager getInstance() {
+    static synchronized SESocketManager getInstance() {
         if (sInstance == null) {
-            sInstance = new SocketChannelManager();
+            sInstance = new SESocketManager();
         }
         return sInstance;
     }
 
-    private SocketChannelManager() {
+    private SESocketManager() {
         mExecutor = Executors.newCachedThreadPool(new ThreadFactory() {
             @Override
-            public Thread newThread(@NonNull Runnable r) {
-                Thread thread = new Thread(r, "Socket_Thread");
+            public Thread newThread(Runnable runnable) {
+                Thread thread = new Thread(runnable, "SESocket_Thread");
                 thread.setDaemon(true);
                 return thread;
             }
@@ -87,7 +84,6 @@ final class SocketChannelManager {
      */
     synchronized SelectionKey registerChannel(AbstractSelectableChannel channel, int interestSet,
                                               ChannelEventHandler handler) throws IOException {
-        Log.i(TAG, "registerChannel");
         if (channel != null) {
             if (mSelector == null) {
                 mSelector = Selector.open();
@@ -139,7 +135,7 @@ final class SocketChannelManager {
                             } else if (key.isAcceptable()) {
                                 handleAcceptableKey(key);
                             } else {
-                                Log.i("SocketChannelManager", "Not handled key: " + key.readyOps());
+                                Log.i("SESocketManager", "Not handled key: " + key.readyOps());
                             }
                         }
                     }

@@ -73,7 +73,7 @@ public class TCPSocketChannelServer {
                 mServerSocketChannel.socket().setReuseAddress(true);
                 mServerSocketChannel.socket().bind(new InetSocketAddress(mPort));
                 mServerChannelEventHandler = new ServerChannelEventHandler();
-                mSelectionKey = SocketChannelManager.getInstance().registerChannel(mServerSocketChannel, SelectionKey.OP_ACCEPT, mServerChannelEventHandler);
+                mSelectionKey = SESocketManager.getInstance().registerChannel(mServerSocketChannel, SelectionKey.OP_ACCEPT, mServerChannelEventHandler);
                 if (mSelectionKey != null) {
                     mStarted = true;
                 } else {
@@ -152,7 +152,7 @@ public class TCPSocketChannelServer {
     /**
      * Socket通道事件处理
      */
-    private class ServerChannelEventHandler implements SocketChannelManager.ChannelEventHandler {
+    private class ServerChannelEventHandler implements SESocketManager.ChannelEventHandler {
         @Override
         public boolean handleChannelEvent(ChannelEvent event) {
             switch (event.getEventCode()) {
