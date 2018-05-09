@@ -8,13 +8,12 @@ import java.nio.channels.DatagramChannel;
 import java.nio.channels.SelectionKey;
 
 /**
- * <h1>UDP客户端</h1>
- * <p>提供UDP发送功能</P>
+ * UDP Socket channel.
  *
- * @author : xiudong.yuan@midea.com.cn
+ * @author : yuanxiudong66@sina.com
  * @since : 2016/4/28
  */
-public class UDPSocketChannel extends ClientSocket {
+public class UDPSocketChannel {
 
     /**
      * UDP地址
@@ -96,7 +95,7 @@ public class UDPSocketChannel extends ClientSocket {
                 mDatagramChannel = DatagramChannel.open();
                 mDatagramChannel.configureBlocking(false);
                 mChannelEventHandler = new UdpChannelEventHandler();
-                mSelectionKey = SESocketManager.getInstance().registerChannel(mDatagramChannel, SelectionKey.OP_READ, mChannelEventHandler);
+                mSelectionKey = SESocketChannelManager.getInstance().registerChannel(mDatagramChannel, SelectionKey.OP_READ, mChannelEventHandler);
                 if (mSelectionKey != null) {
                     mSelectionKey.interestOps(SelectionKey.OP_READ);
                     mDatagramChannel.connect(new InetSocketAddress("127.0.0.1", mUdpPort));
@@ -110,7 +109,6 @@ public class UDPSocketChannel extends ClientSocket {
         return true;
     }
 
-    @Override
     public boolean isConnected() {
         return (mStarted && mDatagramChannel != null && mDatagramChannel.isConnected());
     }
@@ -121,7 +119,6 @@ public class UDPSocketChannel extends ClientSocket {
      * @param data 带写入的数据
      * @return true - 写入成功
      */
-    @Override
     public synchronized boolean writeData(byte[] data) {
         if (mStarted && mDatagramChannel != null && mDatagramChannel.isConnected()) {
             try {
@@ -134,17 +131,14 @@ public class UDPSocketChannel extends ClientSocket {
         return false;
     }
 
-    @Override
     public String getIP() {
         return null;
     }
 
-    @Override
     public int getPort() {
         return 0;
     }
 
-    @Override
     public synchronized void disConnect() {
         if (mStarted) {
             mStarted = false;
@@ -175,21 +169,15 @@ public class UDPSocketChannel extends ClientSocket {
         if (mStarted) {
             if (event.getEventObj() != null) {
                 final byte[] data = (byte[]) event.getEventObj();
-                sMainHandler.post(new Runnable() {
-                    @Override
-                    public void run() {
-                        for (ClientSocketDataListener listener : mDataListenerSet) {
-                            listener.onReadData(data, UDPSocketChannel.this);
-                        }
-                    }
-                });
+
+
             }
             return true;
         }
         return false;
     }
 
-    private class UdpChannelEventHandler implements SESocketManager.ChannelEventHandler {
+    private class UdpChannelEventHandler implements SESocketChannelManager.ChannelEventHandler {
 
         @Override
         public boolean handleChannelEvent(ChannelEvent event) {

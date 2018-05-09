@@ -3,51 +3,36 @@ package com.seagle.net.socket;
 import java.nio.channels.Channel;
 
 /**
- * <h1>Socket通道事件</h1>
+ * Socket channel event.
  *
- * @author : xiudong.yuan@midea.com.cn
+ * @author : yuanxiudong66@sina.com
  * @since : 2016/4/28
  */
 class ChannelEvent {
 
     /**
-     * 连接事件
+     * Event code:socket channel connected.
      */
     static final int EVENT_CONNECTED = 0x01;
-
     /**
-     * 断开连接事件
+     * Event code:socket channel disconnected.
      */
     static final int EVENT_DISCONNECT = 0x02;
-
     /**
-     * 连接失败事件
+     * Event code:socket channel connect failed.
      */
     static final int EVENT_CONNECT_FAILED = 0x03;
-
     /**
-     * 收到连接事件
+     * Event code:socket channel client connect to server.
      */
     static final int EVENT_ACCEPT = 0x04;
-
     /**
-     * 数据读取事件
+     * Event code:socket channel read data.
      */
     static final int EVENT_READ = 0x05;
 
-    /**
-     * 数据通道
-     */
     private final Channel mSocketChannel;
-
-    /**
-     * 事件码
-     */
     private final int mEventCode;
-
-    /**
-     * 事件对象
-     */
     private final Object mEventObj;
 
     ChannelEvent(int eventCode, Object eventObj, Channel socketChannel) {
@@ -56,31 +41,11 @@ class ChannelEvent {
         mSocketChannel = socketChannel;
     }
 
-    /**
-     * 返回事件码
-     *
-     * @return 事件码
-     */
     int getEventCode() {
         return mEventCode;
     }
 
-    /**
-     * 返回事件携带的数据
-     *
-     * @return 数据
-     */
     Object getEventObj() {
         return mEventObj;
-    }
-
-    /**
-     * 返回事件源Socket通道。
-     *
-     * @return Channel
-     */
-    @SuppressWarnings("unused")
-    public Channel getSocketChannel() {
-        return mSocketChannel;
     }
 }
