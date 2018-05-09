@@ -2,7 +2,62 @@ apply plugin: 'java-library'
 
 dependencies {
     implementation fileTree(dir: 'libs', include: ['*.jar'])
+    testCompile 'junit:junit:4.12'
 }
 
 sourceCompatibility = "1.7"
 targetCompatibility = "1.7"
+version 1.1
+
+/**
+ * Build and package release jar.
+ */
+task archiveReleaseJar(type: Jar, dependsOn: build) {
+    archiveName "$project.name-$version" + ".jar"
+    from(project.buildDir.absolutePath + "/classes/java/main")
+}
+
+/**
+ * Generate java doc api.
+ */
+task generateJavadoc(type: Javadoc, dependsOn: archiveReleaseJar) {
+    title = "$project.name api"
+    source = sourceSets.main.java.srcDirs
+    options.links('http://docs.oracle.com/javase/7/docs/api/')
+    options.encoding = 'UTF-8'
+    options.charSet = 'UTF-8'
+    options.locale = 'en_US'
+    options.memberLevel = JavadocMemberLevel.PUBLIC
+    failOnError true
+}
+
+/**
+ * Generate java doc api jar.
+ */
+task generateJavadocJar(type: Jar, dependsOn: generateJavadoc) {
+    classifier = 'javadoc'
+    from generateJavadoc.destinationDir
+}
+
+/**
+ * Copy doc file to doc folder.
+ */
+task copyFiles(dependsOn: generateJavadocJar) {
+    doLast {
+        def docOutputPath = "docs"
+        copy {
+            from('build/docs/javadoc/')
+            into(docOutputPath)
+            include('**/*.*')
+        }
+    }
+}
+
+/**
+ * Package jar and doc.
+ */
+task pkgJar(dependsOn: copyFiles) {
+    doLast {
+        println("Package jar complete")
+    }
+}

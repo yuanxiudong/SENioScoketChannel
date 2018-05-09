@@ -128,6 +128,7 @@ public class SESocketChannel {
             }
         }
         mChannelEventHandler = null;
+        mCallback = null;
     }
 
     /**
@@ -196,6 +197,7 @@ public class SESocketChannel {
             if (mCallback != null) {
                 mCallback.onConnectFailed(SESocketChannel.this);
             }
+            mCallback = null;
             return true;
         }
         return false;
@@ -214,6 +216,7 @@ public class SESocketChannel {
             if (mCallback != null) {
                 mCallback.onConnected(SESocketChannel.this);
             }
+            mCallback = null;
             return true;
         }
         return false;

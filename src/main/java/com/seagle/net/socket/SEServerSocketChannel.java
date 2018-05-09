@@ -17,10 +17,10 @@ import java.util.concurrent.CopyOnWriteArraySet;
 public class SEServerSocketChannel {
 
     private final int mPort;
-    private ServerSocketChannel mServerSocketChannel;
-    private SelectionKey mSelectionKey;
+    private volatile ServerSocketChannel mServerSocketChannel;
+    private volatile SelectionKey mSelectionKey;
     private volatile boolean mListening;
-    private ServerChannelEventHandler mServerChannelEventHandler;
+    private volatile ServerChannelEventHandler mServerChannelEventHandler;
     private final Set<ServerChannelEventListener> mServerChannelEventListenerSet;
 
     public SEServerSocketChannel(int port) {
