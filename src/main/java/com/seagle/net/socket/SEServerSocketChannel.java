@@ -28,6 +28,14 @@ public class SEServerSocketChannel {
         mServerChannelEventListenerSet = new CopyOnWriteArraySet<>();
     }
 
+    public void registerSocketChannelListener(ServerChannelEventListener listener) {
+        mServerChannelEventListenerSet.add(listener);
+    }
+
+    public void unRegisterSocketChannelListener(ServerChannelEventListener listener) {
+        mServerChannelEventListenerSet.remove(listener);
+    }
+
     /**
      * Start server socket listening.
      *
@@ -37,6 +45,7 @@ public class SEServerSocketChannel {
         if (!mListening) {
             try {
                 mServerSocketChannel = ServerSocketChannel.open();
+                mServerSocketChannel.configureBlocking(false);
                 mServerSocketChannel.socket().bind(new InetSocketAddress(mPort));
                 mServerChannelEventHandler = new ServerChannelEventHandler();
                 mServerSocketChannel.configureBlocking(false);

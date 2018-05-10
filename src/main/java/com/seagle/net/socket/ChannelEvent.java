@@ -1,7 +1,5 @@
 package com.seagle.net.socket;
 
-import java.nio.channels.Channel;
-
 /**
  * Socket channel event.
  *
@@ -30,15 +28,18 @@ class ChannelEvent {
      * Event code:socket channel read data.
      */
     static final int EVENT_READ = 0x05;
+    /**
+     * Event code:socket channel read data.
+     */
+    static final int EVENT_WRITE = 0x06;
 
-    private final Channel mSocketChannel;
     private final int mEventCode;
+
     private final Object mEventObj;
 
-    ChannelEvent(int eventCode, Object eventObj, Channel socketChannel) {
+    ChannelEvent(int eventCode, Object eventObj) {
         mEventCode = eventCode;
         mEventObj = eventObj;
-        mSocketChannel = socketChannel;
     }
 
     int getEventCode() {

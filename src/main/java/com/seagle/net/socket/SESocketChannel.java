@@ -40,8 +40,8 @@ public class SESocketChannel {
             throw new NotYetConnectedException();
         }
         mListenerSet = new CopyOnWriteArraySet<>();
+        mChannelEventHandler = new ChannelEventHandler();
         SelectionKey selectionKey = SESocketChannelManager.getInstance().registerChannel(socketChannel, SelectionKey.OP_READ, mChannelEventHandler);
-        selectionKey.interestOps(SelectionKey.OP_WRITE);
         mSocketChannel = socketChannel;
         mState = ConnectState.STATE_CONNECTED;
         mSelectionKey = selectionKey;
@@ -78,14 +78,15 @@ public class SESocketChannel {
             try {
                 if (callback == null) {
                     socketChannel = SocketChannel.open(address);
-                    selectionKey = SESocketChannelManager.getInstance().registerChannel(mSocketChannel, SelectionKey.OP_READ, mChannelEventHandler);
-                    selectionKey.interestOps(SelectionKey.OP_WRITE);
-                    mState = ConnectState.STATE_CONNECTING;
+                    selectionKey = SESocketChannelManager.getInstance().registerChannel(socketChannel, SelectionKey.OP_READ, mChannelEventHandler);
+                    mState = ConnectState.STATE_CONNECTED;
                 } else {
                     socketChannel = SocketChannel.open();
                     socketChannel.configureBlocking(false);
                     selectionKey = SESocketChannelManager.getInstance().registerChannel(mSocketChannel, SelectionKey.OP_CONNECT, mChannelEventHandler);
+                    socketChannel.connect(address);
                     mCallback = callback;
+                    mState = ConnectState.STATE_CONNECTED;
                 }
                 mSocketChannel = socketChannel;
                 mSelectionKey = selectionKey;
@@ -129,6 +130,18 @@ public class SESocketChannel {
         }
         mChannelEventHandler = null;
         mCallback = null;
+    }
+
+    /**
+     * Return socket channel.
+     * @return SocketChannel
+     */
+    public SocketChannel getSocketChannel() {
+        if(ConnectState.STATE_CONNECTED == mState) {
+            return mSocketChannel;
+        }else{
+            return null;
+        }
     }
 
     /**

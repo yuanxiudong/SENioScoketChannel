@@ -13,6 +13,7 @@ import java.util.Iterator;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 
 /**
  * Socket channel manager.
@@ -26,6 +27,7 @@ final class SESocketChannelManager {
     private final ExecutorService mExecutor;
     private volatile boolean mSelecting;
     private volatile static SESocketChannelManager sInstance;
+    private volatile boolean mWaking;
 
     static synchronized SESocketChannelManager getInstance() {
         if (sInstance == null) {
@@ -55,7 +57,11 @@ final class SESocketChannelManager {
                 mSelector = Selector.open();
             }
             channel.configureBlocking(false);
+            //This is too shit.
+            mWaking = true;
+            mSelector.wakeup();
             SelectionKey selectionKey = channel.register(mSelector, interestSet, handler);
+            mWaking = false;
             if (!mSelecting) {
                 mSelecting = true;
                 Thread thread = new Thread(new SelectKeyLooper());
@@ -75,6 +81,14 @@ final class SESocketChannelManager {
             try {
                 while (mSelecting && !Thread.currentThread().isInterrupted()) {
                     try {
+                        if (mWaking) {
+                            try {
+                                TimeUnit.MILLISECONDS.sleep(50);
+                            } catch (InterruptedException e) {
+                                e.printStackTrace();
+                            }
+                            continue;
+                        }
                         if (mSelector.select() <= 0) {
                             continue;
                         }
@@ -86,9 +100,12 @@ final class SESocketChannelManager {
                         Iterator<SelectionKey> iterator = mSelector.selectedKeys().iterator();
                         while (iterator.hasNext()) {
                             SelectionKey key = iterator.next();
-                            KeyHandleTask task = reuseTask(key);
-                            mExecutor.submit(task);
                             iterator.remove();
+                            mSelector.selectedKeys().remove(key);
+                            if (key.isValid()) {
+                                KeyHandleTask task = reuseTask(key);
+                                mExecutor.submit(task);
+                            }
                         }
                     } catch (Exception ex) {
                         ex.printStackTrace();
@@ -116,8 +133,8 @@ final class SESocketChannelManager {
         return null;
     }
 
-    private void dispatchEvent(int eventCode, Object object, Channel channel, ChannelEventHandler handler) {
-        ChannelEvent channelEvent = new ChannelEvent(eventCode, object, channel);
+    private void dispatchEvent(int eventCode, Object object, ChannelEventHandler handler) {
+        ChannelEvent channelEvent = new ChannelEvent(eventCode, object);
         if (handler.handleChannelEvent(channelEvent)) {
             System.out.println("Event handle success!");
         }
@@ -144,6 +161,7 @@ final class SESocketChannelManager {
     private class KeyHandleTask implements Runnable {
 
         private SelectionKey selectionKey;
+        private final ByteBuffer byteBuffer = ByteBuffer.allocate(1024);
 
         private KeyHandleTask(SelectionKey selectionKey) {
             this.selectionKey = selectionKey;
@@ -178,10 +196,10 @@ final class SESocketChannelManager {
                         socketChannel.finishConnect();
                     }
                     socketChannel.configureBlocking(false);
-                    dispatchEvent(ChannelEvent.EVENT_CONNECTED, "Connect success", socketChannel, handler);
+                    dispatchEvent(ChannelEvent.EVENT_CONNECTED, null, handler);
                 } catch (IOException e) {
                     selectionKey.cancel();
-                    dispatchEvent(ChannelEvent.EVENT_CONNECT_FAILED, e.getMessage(), socketChannel, handler);
+                    dispatchEvent(ChannelEvent.EVENT_CONNECT_FAILED, e.getMessage(), handler);
                 }
             }
         }
@@ -199,7 +217,7 @@ final class SESocketChannelManager {
                     try {
                         SocketChannel channel = ((ServerSocketChannel) socketChannel).accept();
                         ChannelEventHandler handler = (ChannelEventHandler) obj;
-                        dispatchEvent(ChannelEvent.EVENT_ACCEPT, channel, socketChannel, handler);
+                        dispatchEvent(ChannelEvent.EVENT_ACCEPT, channel, handler);
                     } catch (Exception ex) {
                         ex.printStackTrace();
                     }
@@ -217,13 +235,12 @@ final class SESocketChannelManager {
             Object obj = selectionKey.attachment();
             if (null != obj && obj instanceof ChannelEventHandler) {
                 ChannelEventHandler handler = (ChannelEventHandler) obj;
-                ByteBuffer byteBuffer = ByteBuffer.allocate(1024);
                 byte[] dataBytes = null;
                 try {
                     while (true) {
-                        byteBuffer.clear();
                         int length = socketChannel.read(byteBuffer);
                         if (length > 0) {
+                            System.out.println("Handle readable event!");
                             byteBuffer.flip();
                             byte[] newData = new byte[byteBuffer.limit()];
                             byteBuffer.get(newData);
@@ -234,11 +251,13 @@ final class SESocketChannelManager {
                             throw new IOException("Stream end!");
                         }
                     }
-                    dispatchEvent(ChannelEvent.EVENT_READ, dataBytes, socketChannel, handler);
+                    if (dataBytes != null && dataBytes.length > 0) {
+                        dispatchEvent(ChannelEvent.EVENT_READ, dataBytes, handler);
+                    }
                 } catch (NotYetConnectedException | IOException ex) {
                     ex.printStackTrace();
                     selectionKey.cancel();
-                    dispatchEvent(ChannelEvent.EVENT_DISCONNECT, null, socketChannel, handler);
+                    dispatchEvent(ChannelEvent.EVENT_DISCONNECT, ex, handler);
                 }
             }
         }
@@ -249,7 +268,19 @@ final class SESocketChannelManager {
          * @param selectionKey SelectionKey
          */
         private void handleWritableKey(SelectionKey selectionKey) {
-            System.out.println("Socket writable event: " + selectionKey);
+            final Channel socketChannel = selectionKey.channel();
+            Object obj = selectionKey.attachment();
+            if (null != obj && obj instanceof ChannelEventHandler) {
+                if (socketChannel != null) {
+                    try {
+                        ChannelEventHandler handler = (ChannelEventHandler) obj;
+                        dispatchEvent(ChannelEvent.EVENT_WRITE, null, handler);
+                    } catch (Exception ex) {
+                        ex.printStackTrace();
+                        selectionKey.cancel();
+                    }
+                }
+            }
         }
     }
 
