@@ -170,12 +170,16 @@ final class SESocketChannelManager {
         @Override
         public void run() {
             if (selectionKey.isConnectable()) {
+                System.out.println("isConnectable");
                 handleConnectableKey(selectionKey);
             } else if (selectionKey.isReadable()) {
+                System.out.println("isReadable");
                 handleReadableKey(selectionKey);
             } else if (selectionKey.isWritable()) {
+                System.out.println("isWritable");
                 handleWritableKey(selectionKey);
             } else if (selectionKey.isAcceptable()) {
+                System.out.println("isAcceptable");
                 handleAcceptableKey(selectionKey);
             }
             cacheTask(this);

@@ -11,12 +11,11 @@ import java.util.Set;
 import java.util.concurrent.CopyOnWriteArraySet;
 
 /**
- * <h1>SocketChannel</h1>
+ * SocketChannel.
  *
  * @author : yuanxiudong66@sina.com
  * @since : 2016/4/28
  */
-@SuppressWarnings("unused")
 public class SESocketChannel {
 
     private enum ConnectState {
@@ -35,7 +34,7 @@ public class SESocketChannel {
         mState = ConnectState.STATE_IDLE;
     }
 
-    public SESocketChannel(SocketChannel socketChannel) throws IOException {
+    SESocketChannel(SocketChannel socketChannel) throws IOException {
         if (socketChannel == null || !socketChannel.isConnected()) {
             throw new NotYetConnectedException();
         }
@@ -47,10 +46,21 @@ public class SESocketChannel {
         mSelectionKey = selectionKey;
     }
 
+    /**
+     * Register a socket channel state listener for connect state and data.
+     *
+     * @param listener SocketChannelStateListener
+     * @see SocketChannelStateListener
+     */
     public void registerSocketChannelListener(SocketChannelStateListener listener) {
         mListenerSet.add(listener);
     }
 
+    /**
+     * Unregister a socket channel state listener.
+     *
+     * @param listener SocketChannelStateListener
+     */
     public void unRegisterSocketChannelListener(SocketChannelStateListener listener) {
         mListenerSet.remove(listener);
     }
@@ -115,14 +125,14 @@ public class SESocketChannel {
      */
     public void disConnect() {
         mState = ConnectState.STATE_IDLE;
+        SocketChannel socketChannel = mSocketChannel;
         SelectionKey selectionKey = mSelectionKey;
+        mChannelEventHandler = null;
+        mCallback = null;
+        mSelectionKey = null;
         if (selectionKey != null) {
             selectionKey.cancel();
         }
-        mSelectionKey = null;
-
-        SocketChannel socketChannel = mSocketChannel;
-        mSocketChannel = null;
         if (socketChannel != null) {
             try {
                 socketChannel.close();
@@ -130,8 +140,6 @@ public class SESocketChannel {
                 e.printStackTrace();
             }
         }
-        mChannelEventHandler = null;
-        mCallback = null;
     }
 
     /**
@@ -140,11 +148,7 @@ public class SESocketChannel {
      * @return SocketChannel
      */
     public SocketChannel getSocketChannel() {
-        if (ConnectState.STATE_CONNECTED == mState) {
-            return mSocketChannel;
-        } else {
-            return null;
-        }
+        return mSocketChannel;
     }
 
     /**

@@ -28,10 +28,22 @@ public class SEServerSocketChannel {
         mServerChannelEventListenerSet = new CopyOnWriteArraySet<>();
     }
 
+    /**
+     * Register a server channel event listener for accept event.
+     *
+     * @param listener ServerChannelEventListener
+     * @see ServerChannelEventListener
+     */
     public void registerSocketChannelListener(ServerChannelEventListener listener) {
         mServerChannelEventListenerSet.add(listener);
     }
 
+    /**
+     * Unregister a server channel event listener.
+     *
+     * @param listener ServerChannelEventListener.
+     * @see ServerChannelEventListener
+     */
     public void unRegisterSocketChannelListener(ServerChannelEventListener listener) {
         mServerChannelEventListenerSet.remove(listener);
     }
@@ -41,7 +53,7 @@ public class SEServerSocketChannel {
      *
      * @throws IOException Start exception
      */
-    public void startServer() throws IOException {
+    public synchronized void startServer() throws IOException {
         if (!mListening) {
             try {
                 mServerSocketChannel = ServerSocketChannel.open();
@@ -64,18 +76,19 @@ public class SEServerSocketChannel {
     }
 
     /**
-     * Stop server listening.
+     * Stop server listening and release resources.
+     * Notice: just close server accept.
      */
-    public void closeServer() {
-        mListening = false;
+    public synchronized void closeServer() {
         SelectionKey selectionKey = mSelectionKey;
+        ServerSocketChannel serverSocketChannel = mServerSocketChannel;
+        mSelectionKey = null;
+        mServerSocketChannel = null;
+        mServerChannelEventHandler = null;
+        mListening = false;
         if (selectionKey != null) {
             selectionKey.cancel();
         }
-        mSelectionKey = null;
-
-        ServerSocketChannel serverSocketChannel = mServerSocketChannel;
-        mServerSocketChannel = null;
         if (serverSocketChannel != null) {
             try {
                 serverSocketChannel.close();
@@ -83,7 +96,7 @@ public class SEServerSocketChannel {
                 e.printStackTrace();
             }
         }
-        mServerChannelEventHandler = null;
+
     }
 
     /**
