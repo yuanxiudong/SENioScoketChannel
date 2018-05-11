@@ -77,21 +77,23 @@ public class SESocketChannel {
             SelectionKey selectionKey = null;
             try {
                 if (callback == null) {
+                    mState = ConnectState.STATE_CONNECTING;
                     socketChannel = SocketChannel.open(address);
                     selectionKey = SESocketChannelManager.getInstance().registerChannel(socketChannel, SelectionKey.OP_READ, mChannelEventHandler);
                     mState = ConnectState.STATE_CONNECTED;
                 } else {
+                    mState = ConnectState.STATE_CONNECTING;
                     socketChannel = SocketChannel.open();
                     socketChannel.configureBlocking(false);
-                    selectionKey = SESocketChannelManager.getInstance().registerChannel(mSocketChannel, SelectionKey.OP_CONNECT, mChannelEventHandler);
+                    selectionKey = SESocketChannelManager.getInstance().registerChannel(socketChannel, SelectionKey.OP_CONNECT, mChannelEventHandler);
                     socketChannel.connect(address);
                     mCallback = callback;
-                    mState = ConnectState.STATE_CONNECTED;
                 }
                 mSocketChannel = socketChannel;
                 mSelectionKey = selectionKey;
             } catch (Exception ex) {
                 ex.printStackTrace();
+                mState = ConnectState.STATE_IDLE;
                 if (selectionKey != null) {
                     selectionKey.cancel();
                 }
@@ -134,12 +136,13 @@ public class SESocketChannel {
 
     /**
      * Return socket channel.
+     *
      * @return SocketChannel
      */
     public SocketChannel getSocketChannel() {
-        if(ConnectState.STATE_CONNECTED == mState) {
+        if (ConnectState.STATE_CONNECTED == mState) {
             return mSocketChannel;
-        }else{
+        } else {
             return null;
         }
     }
