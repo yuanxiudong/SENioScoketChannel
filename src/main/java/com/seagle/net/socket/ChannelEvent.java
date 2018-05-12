@@ -1,5 +1,7 @@
 package com.seagle.net.socket;
 
+import java.util.concurrent.ArrayBlockingQueue;
+
 /**
  * Socket channel event.
  *
@@ -7,6 +9,11 @@ package com.seagle.net.socket;
  * @since : 2016/4/28
  */
 class ChannelEvent {
+
+    /**
+     * As socket event is very frequency,so cache it for reuse.
+     */
+    private static final ArrayBlockingQueue<ChannelEvent> CACHE_QUEUE = new ArrayBlockingQueue<>(50);
 
     /**
      * Event code:socket channel connected.
@@ -33,20 +40,63 @@ class ChannelEvent {
      */
     static final int EVENT_WRITE = 0x06;
 
-    private final int mEventCode;
+    /**
+     * event code.
+     */
+    private int eventCode;
 
-    private final Object mEventObj;
+    /**
+     * event attachment
+     */
+    private Object eventObj;
 
-    ChannelEvent(int eventCode, Object eventObj) {
-        mEventCode = eventCode;
-        mEventObj = eventObj;
+    private ChannelEvent(int eventCode, Object eventObj) {
+        this.eventCode = eventCode;
+        this.eventObj = eventObj;
     }
 
+    /**
+     * Return event code.
+     *
+     * @return event code
+     */
     int getEventCode() {
-        return mEventCode;
+        return eventCode;
     }
 
+    /**
+     * Return attachment.
+     *
+     * @return attachment
+     */
     Object getEventObj() {
-        return mEventObj;
+        return eventObj;
+    }
+
+    /**
+     * Cache and reuse this object.
+     */
+    void reuse() {
+        eventCode = -1;
+        eventObj = null;
+        CACHE_QUEUE.offer(this);
+    }
+
+    /**
+     * Create a object.
+     *
+     * @param eventCode event code
+     * @param eventObj  attachment
+     * @return ChannelEvent
+     */
+    static ChannelEvent create(int eventCode, Object eventObj) {
+        ChannelEvent event = CACHE_QUEUE.poll();
+        if (event == null) {
+            event = new ChannelEvent(eventCode, eventObj);
+        } else {
+            event.eventCode = eventCode;
+            event.eventObj = eventObj;
+        }
+        return event;
     }
 }

@@ -209,13 +209,13 @@ public class SESocketChannel {
     private boolean handleConnectFailed(ChannelEvent event) {
         if (ConnectState.STATE_CONNECTING == mState) {
             disConnect();
-            String eventMsg = null;
-            if (event.getEventObj() != null) {
-                eventMsg = (String) event.getEventObj();
+            Throwable throwable = null;
+            Object attachment = event.getEventObj();
+            if (attachment != null && attachment instanceof Throwable) {
+                throwable = (Throwable) attachment;
             }
-            final String errorMsg = eventMsg;
             if (mCallback != null) {
-                mCallback.onConnectFailed(SESocketChannel.this);
+                mCallback.onConnectFailed(SESocketChannel.this, throwable);
             }
             mCallback = null;
             return true;
@@ -307,7 +307,7 @@ public class SESocketChannel {
          *
          * @param channel SocketChannel
          */
-        void onConnectFailed(SESocketChannel channel);
+        void onConnectFailed(SESocketChannel channel, Throwable throwable);
 
         /**
          * Connect success

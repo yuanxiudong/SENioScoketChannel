@@ -7,7 +7,7 @@ import java.util.Set;
 import java.util.concurrent.CopyOnWriteArraySet;
 
 public class Main {
-    private static final int SERVER_PORT = 5555;
+    private static final int SERVER_PORT = 55566;
     private static DataSender sSender;
     private static SEServerSocketChannel sServerChannel;
 
@@ -54,8 +54,8 @@ public class Main {
         try {
             channel.connect(ipAddress, port, new SESocketChannel.ConnectionCallback() {
                 @Override
-                public void onConnectFailed(SESocketChannel channel) {
-                    System.out.println("Client connect failed!");
+                public void onConnectFailed(SESocketChannel channel, Throwable throwable) {
+                    System.out.println("Client connect failed: " + throwable.getMessage());
                     channel.unRegisterSocketChannelListener(LISTENER);
                     sSender.delSocketChannel(channel);
                 }
@@ -82,7 +82,7 @@ public class Main {
      */
     private static void startServer(int localPort) {
         try {
-            SEServerSocketChannel server = new SEServerSocketChannel(5555);
+            SEServerSocketChannel server = new SEServerSocketChannel(localPort);
             String serverIP = InetAddress.getLocalHost().getHostAddress();
             server.registerSocketChannelListener(new SEServerSocketChannel.ServerChannelEventListener() {
                 @Override
@@ -94,7 +94,7 @@ public class Main {
             });
             server.startServer();
             sServerChannel = server;
-            System.out.println("Start server success: " + serverIP + ":" + 5555);
+            System.out.println("Start server success: " + serverIP + ":" + localPort);
         } catch (IOException ex) {
             ex.printStackTrace();
         }
@@ -119,8 +119,8 @@ public class Main {
             while (!isInterrupted()) {
                 Scanner xx = new Scanner(System.in);
                 String readData = xx.nextLine();
-                if("exit".equalsIgnoreCase(readData)){
-                    if(sServerChannel != null){
+                if ("exit".equalsIgnoreCase(readData)) {
+                    if (sServerChannel != null) {
                         sServerChannel.closeServer();
                     }
                     return;
@@ -143,8 +143,8 @@ public class Main {
         public void onDisConnected(SESocketChannel channel) {
             System.out.println("Client disconnected!");
             try {
-                System.out.println("Client disconnected!" + channel.getSocketChannel().getRemoteAddress());
-            } catch (IOException e) {
+                System.out.println("Client disconnected!" + channel.getSocketChannel().socket().getInetAddress().getHostAddress());
+            } catch (Exception e) {
                 e.printStackTrace();
             }
             sSender.delSocketChannel(channel);
