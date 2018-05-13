@@ -21,6 +21,9 @@ task archiveReleaseJar(type: Jar, dependsOn: build) {
  * Generate java doc api.
  */
 task generateJavadoc(type: Javadoc, dependsOn: archiveReleaseJar) {
+    doLast{
+        println "$project.name api"+sourceSets.main.java.srcDirs
+    }
     title = "$project.name api"
     source = sourceSets.main.java.srcDirs
     options.links('http://docs.oracle.com/javase/7/docs/api/')
@@ -45,8 +48,9 @@ task generateJavadocJar(type: Jar, dependsOn: generateJavadoc) {
 task copyFiles(dependsOn: generateJavadocJar) {
     doLast {
         def docOutputPath = "docs"
+        println project.buildDir.absolutePath + '/build/docs/javadoc/'
         copy {
-            from('build/docs/javadoc/')
+            from(project.buildDir.absolutePath + '/build/docs/javadoc/')
             into(docOutputPath)
             include('**/*.*')
         }
