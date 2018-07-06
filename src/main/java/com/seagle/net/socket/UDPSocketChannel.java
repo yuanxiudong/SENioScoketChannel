@@ -169,8 +169,6 @@ public class UDPSocketChannel {
         if (mStarted) {
             if (event.getEventObj() != null) {
                 final byte[] data = (byte[]) event.getEventObj();
-
-
             }
             return true;
         }
